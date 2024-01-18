@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convert HTML to JSON</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #fileInput {
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #3498DB;
+            color: #fff;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980B9;
+        }
+    </style>
+</head>
+<body>
+    <input type="file" id="fileInput" accept=".html" required>
+    <button onclick="convertAndDownload()">Convert and Download JSON</button>
+    <script>
+        function convertToJSON(htmlContent) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlContent, 'text/html');
+            const capitals = [];
+            const capitalElements = doc.querySelectorAll('.capital');
+            const stateElements = doc.querySelectorAll('.state');
+            capitalElements.forEach((capitalElement, index) => {
+                const state = stateElements[index].textContent.trim();
+                const capital = capitalElement.textContent.trim();
+                capitals.push({ "capital": capital, "state": state });
+            });
+            const summary = {
+                "numberOfCapitals": capitals.length
+            };
+            return {
+                "capitals": capitals,
+                "summary": summary
+            };
+        }
+        function convertAndDownload() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const htmlContent = event.target.result;
+                    const outputJSON = convertToJSON(htmlContent);
+                    const blob = new Blob([JSON.stringify(outputJSON, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'output.json';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                };
+                reader.readAsText(file, 'UTF-8');
+            } else {
+                alert("Please select an HTML file.");
+            }
+        }
+    </script>
+</body>
+</html>
